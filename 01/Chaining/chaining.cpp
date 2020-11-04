@@ -34,34 +34,101 @@ int hashCode(int key){
 int insertItem(int fd,DataItem item){
     struct DataItem data;                            //a variable to read in it the records from the db
     int count = 0;                                   //No of accessed records
-    int rewind = 0;                                  //A flag to start searching from the first bucket
     int hashIndex = hashCode(item.key);              //calculate the Bucket index
     int startingOffset = hashIndex * sizeof(Bucket); //calculate the starting address of the bucket
     int Offset = startingOffset;                     //Offset variable which we will use to iterate on the db
-    while (!(rewind == 1 && Offset == startingOffset))
-    {
-        ssize_t result = pread(fd, &data, sizeof(DataItem), Offset);
-        count++;
-        if (result <= 0) //either an error happened in the pread or it hit an unallocated space
-        {                // perror("some error occurred in pread");
-            return -1;
-        }
-        else if (data.valid == 1)
-        {
-            Offset += sizeof(DataItem); //move the offset to next record
-            if (Offset >= FILESIZE && rewind == 0)
-            { //if reached end of the file start again
-                rewind = 1;
-                Offset = 0;
-            }
-        }
-        else
-        {   
-            item.valid = 1;
-            pwrite(fd, &item, sizeof(DataItem), Offset);
-            break;
-        }
-    }
+	bool written = false;
+	for (int i = 0; i < RECORDSPERBUCKET; ++i){
+		ssize_t result = pread(fd, &data, sizeof(DataItem), Offset);
+		count++;
+		if (result <= 0) //either an error happened in the pread or it hit an unallocated space
+		{                // 
+			perror("some error occurred in pread");
+			return -1;
+		}
+		else if (data.valid != 1)
+		{
+			written = true;
+			item.valid = 1;
+			pwrite(fd, &item, sizeof(DataItem), Offset);
+			return count;
+		}
+		else
+		{   
+			Offset += sizeof(DataItem); //move the offset to next record
+		}
+	}
+	if(!written){
+		// 1- check whether the overflow chain is connected to this bucket or not
+		int startingOverflow = MBUCKETS * sizeof(Bucket);
+		int overflowOffset = startingOverflow;
+	    struct ChainItem data;
+		struct ChainItem newItem;
+		newItem.data = item.data;
+		newItem.key = item.key;
+		newItem.valid = 1;
+		newItem.chainPtr = 0;
+		while (overflowOffset < FILESIZE && !written)
+		{
+			count++;
+			// fetch first empty place and take it's offset and attach the data to it
+			// and attach the address of it to the main bucket
+			ssize_t result = pread(fd, &data, CHAIN_RECORD_SIZE, overflowOffset);
+			if (result <= 0) //either an error happened in the pread or it hit an unallocated space
+			{                // perror("some error occurred in pread");
+				perror("some error occurred in pread");
+				return -1;
+			}
+			else if (data.valid != 1)
+			{
+				written = true;
+				newItem.valid = 1;
+				pwrite(fd, &newItem, CHAIN_RECORD_SIZE, overflowOffset);
+				// connect the chain 
+				int ptr;
+				int bucketPtrOffset = startingOffset + sizeof(Bucket) - sizeof(int);
+				ssize_t cresult = pread(fd, &ptr, sizeof(ptr), bucketPtrOffset);
+				if (cresult <= 0){
+					perror("some error occurred in pread");
+					return -1;
+				}
+				if (ptr == 0){
+					// bucket is never connected before!
+					ssize_t wresult = pwrite(fd, &overflowOffset , sizeof(overflowOffset), bucketPtrOffset);
+					if (wresult <= 0) //either an error happened in the pread or it hit an unallocated space
+					{                // 
+						perror("some error occurred in pread");
+						return -1;
+					}
+				}
+				else {
+					// bucket is connected 
+					struct ChainItem chainItem ;
+					int prevPtr;
+					while (ptr != 0) {
+						prevPtr = ptr;
+						ssize_t cresult = pread(fd, &chainItem, sizeof(chainItem), ptr);
+						if (cresult <= 0){
+							perror("some error occurred in pread");
+							return -1;
+						}
+						ptr = chainItem.chainPtr;
+					}
+					chainItem.chainPtr = overflowOffset;
+					ssize_t cresult = pwrite(fd, &chainItem, CHAIN_RECORD_SIZE, prevPtr);
+					if (cresult <= 0){
+						perror("some error occurred in pread");
+						return -1;
+					}
+				}
+				break;
+			}
+			else 
+			{
+				overflowOffset += CHAIN_RECORD_SIZE;
+			}
+		}
+	}
     return count;
 }
 
@@ -133,19 +200,51 @@ int DisplayFile(int fd){
 	struct DataItem data;
 	int count = 0;
 	int Offset = 0;
-	for(Offset =0; Offset< FILESIZE;Offset += sizeof(DataItem))
+	int bucketItr = 0;
+	for (bucketItr = 0; bucketItr < MBUCKETS; bucketItr++)
 	{
-		ssize_t result = pread(fd,&data,sizeof(DataItem), Offset);
-		if(result < 0)
-		{ 	  perror("some error occurred in pread");
-			  return -1;
-		} else if (result == 0 || data.valid == 0 ) { //empty space found or end of file
-			printf("Bucket: %d, Offset %d:~\n",Offset/BUCKETSIZE,Offset);
-		} else {
-			pread(fd,&data,sizeof(DataItem), Offset);
-			printf("Bucket: %d, Offset: %d, Data: %d, key: %d\n",Offset/BUCKETSIZE,Offset,data.data,data.key);
-					 count++;
+		int endOffset = ((bucketItr+1) * sizeof(Bucket)) - sizeof(int);
+		//printf("End offset is %d of bucket itr %d\n\n",endOffset,bucketItr);
+		for(Offset = (bucketItr * sizeof(Bucket)) ; Offset < endOffset; Offset += sizeof(DataItem))
+		{
+			ssize_t result = pread(fd,&data,sizeof(DataItem), Offset);
+			if(result < 0)
+			{ 	  perror("some error occurred in pread");
+				return -1;
+			} else if (result == 0 || data.valid == 0 ) { //empty space found or end of file
+				printf("Bucket: %d, Offset %d:~\n",Offset/BUCKETSIZE,Offset);
+			} else {
+				pread(fd,&data,sizeof(DataItem), Offset);
+				printf("Bucket: %d, Offset: %d, Data: %d, key: %d\n",Offset/BUCKETSIZE,Offset,data.data,data.key);
+						count++;
+			}
 		}
+		int nextRecordOffset;
+		struct ChainItem chainItem;
+
+		ssize_t result = pread(fd, &nextRecordOffset, sizeof(nextRecordOffset), endOffset);
+		if(result <= 0){
+			return -1;
+		}
+		printf("Bucket chainPtr: %d\n",nextRecordOffset);
+		while (nextRecordOffset != 0)
+		{
+			if(result < 0)
+			{ 	  
+				perror("some error occurred in pread");
+				return -1;
+			} else if (result == 0 || chainItem.valid == 0 ) { //empty space found or end of file
+				printf("Bucket: %d, Offset %d:~\n",bucketItr,nextRecordOffset);
+				break;
+			} else {
+				pread(fd,&chainItem,CHAIN_RECORD_SIZE, nextRecordOffset);
+				printf("Bucket: %d, Offset: %d, Data: %d, key: %d, chainPtr: %d\n",bucketItr,nextRecordOffset,chainItem.data,chainItem.key,chainItem.chainPtr);
+				nextRecordOffset = chainItem.chainPtr;
+				count++;
+			}
+		}
+		printf("\n");
+		
 	}
 	return count;
 }

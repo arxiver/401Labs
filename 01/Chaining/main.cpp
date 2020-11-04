@@ -14,7 +14,7 @@ struct DataItem * search(int key);
 
 
 int filehandle;   //handler for the database file
-int ofhandle; // handler for overflow file database
+
 /* DBMS (DataBase Management System) needs to store its data in something non-volatile
  * so it stores its data into files (manteqy :)).
 
@@ -46,16 +46,22 @@ int main(){
 
   //1. Create Database file or Open it if it already exists, check readfile.cpp
    filehandle = createFile(FILESIZE,"chaining");
-   ofhandle = createFile(FILESIZE,"overflow");
-
-   //filehandle = createFile(FILESIZE,"chaining");
   //2. Display the database file, check openAddressing.cpp
-   DisplayFile(filehandle);
+   //DisplayFile(filehandle);
 
   //3. Add some data in the table
    insert(1, 20);
+   insert(1, 70);
+   insert(1, 80);
+   insert(1, 70);
+   insert(2, 20);
    insert(2, 70);
-   insert(42, 80);
+   insert(2, 80);
+   insert(2, 70);
+   DisplayFile(filehandle);
+
+   return 0;
+
    insert(4, 25);
    insert(12, 44);
    insert(14, 32);
@@ -74,7 +80,7 @@ int main(){
 
    //4. Display the database file again
    DisplayFile(filehandle);
-
+   // TODO
    //5. Search the database
    search(13);
 
@@ -153,8 +159,6 @@ int main(){
    DisplayFile(filehandle);
    // And Finally don't forget to close the file.
    close(filehandle);
-   close(ofhandle);
-
    return 0;
 
 
@@ -171,7 +175,7 @@ void insert(int key,int data){
      item.data = data;
      item.key = key;
      item.valid = 1;
-     int result= insertItem(filehandle,item); 
+     int result= insertItem(filehandle,item);  //TODO: implement this function in openAddressing.cpp
      printf("Insert: No. of searched records:%d\n",abs(result));
 }
 
