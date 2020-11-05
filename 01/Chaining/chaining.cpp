@@ -319,8 +319,8 @@ int deleteDataItem(int fd, int key)
 {
 	//Definitions
 	struct DataItem data;							 //a variable to read in it the records from the db
-	int count = 0;										 //No of accessed records
-	int bucketItr = hashCode(key);			 //calculate the Bucket index
+	int count = 0;									 //No of accessed records
+	int bucketItr = hashCode(key);					 //calculate the Bucket index
 	int startingOffset = bucketItr * sizeof(Bucket); //calculate the starting address of the bucket
 	int endOffset = ((bucketItr + 1) * sizeof(Bucket)) - sizeof(BucketPtr);
 	for (int Offset = startingOffset; Offset < endOffset; Offset += sizeof(DataItem))
@@ -348,14 +348,16 @@ int deleteDataItem(int fd, int key)
 		}
 	}
 	struct ChainItem chainItem;
+	struct ChainItem prevChainItem;
 	struct BucketPtr bucketPtr;
 	ssize_t result = pread(fd, &bucketPtr, sizeof(BucketPtr), endOffset);
 	if (bucketPtr.valid != 1)
 	{
 		return -1;
 	}
-	int nextRecordOffset = bucketPtr.ptr;
+	int prevRecordOffset = bucketPtr.ptr;
 	int currentRecordOffset = bucketPtr.ptr;
+	int nextRecordOffset = bucketPtr.ptr;
 	bool firstEntry = true;
 	do
 	{
@@ -366,41 +368,36 @@ int deleteDataItem(int fd, int key)
 		}
 		else if (chainItem.valid == 1 && chainItem.key == key)
 		{
-			//I found the needed record
-			// item->data = data.data;
-			// delete me and connect the chain
-			if (firstEntry){
-				if (chainItem.chainPtr == 0 && chainItem.valid == 1){
+			//I found the needed record, delete me and connect the chain
+			if (firstEntry)
+			{
+				if (chainItem.chainPtr == 0 && chainItem.valid == 1)
+				{
 					bucketPtr.valid = 0;
 					bucketPtr.ptr = 0;
 					result = pwrite(fd, &bucketPtr, sizeof(BucketPtr), endOffset);
 				}
-				else{
+				else
+				{
 					bucketPtr.valid = 1;
 					bucketPtr.ptr = chainItem.chainPtr;
 					result = pwrite(fd, &bucketPtr, sizeof(BucketPtr), endOffset);
 				}
 			}
-			else{
-				if (chainItem.chainPtr == 0 && chainItem.valid == 1){
-					bucketPtr.valid = 0;
-					bucketPtr.ptr = 0;
-					// write to the previous record instead of bucket ptr
-					result = pwrite(fd, &bucketPtr, sizeof(BucketPtr), endOffset);
-				}
-				else{
-					bucketPtr.valid = 1;
-					bucketPtr.ptr = chainItem.chainPtr;
-					// write to the previous record instead of bucket ptr
-					result = pwrite(fd, &bucketPtr, sizeof(BucketPtr), endOffset);
-				}
+			else
+			{
+				prevChainItem.chainPtr = chainItem.chainPtr;
+				result = pwrite(fd, &prevChainItem, CHAIN_RECORD_SIZE, prevRecordOffset);
 			}
+
 			return count;
 		}
 		else
 		{
 			firstEntry = false;
 			count++;
+			prevChainItem = chainItem;
+			prevRecordOffset = nextRecordOffset;
 			pread(fd, &chainItem, CHAIN_RECORD_SIZE, nextRecordOffset);
 			currentRecordOffset = nextRecordOffset;
 			nextRecordOffset = chainItem.chainPtr;
