@@ -197,14 +197,10 @@ struct DataItem * search(int key)
    Output: return 1 on success and -1 on failure
 */
 int deleteItem(int key){
-   struct DataItem* item = (struct DataItem *) malloc(sizeof(struct DataItem));
-   item->key = key;
-   int diff = 0;
-   int Offset= searchItem(filehandle,item,&diff);
-   printf("Delete: No of records searched is %d\n",diff);
-   if(Offset >=0 )
-   {
-    return deleteOffset(filehandle,Offset);
-   }
-   return -1;
+   int count = deleteDataItem(filehandle,key);
+   if (count != -1)
+      printf("Delete: No of records searched is %d\n",count);
+   else 
+      printf("Cannot delete this key is not found!");
+   return count;
 }
