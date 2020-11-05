@@ -39,11 +39,15 @@ struct ChainItem {
    int chainPtr;
 };
 
+struct BucketPtr {
+   int valid;
+   int ptr;
+};
 
 //Each bucket contains number of records
 struct Bucket {
 	struct DataItem  dataItem[RECORDSPERBUCKET];
-   int chainPtr;
+   struct BucketPtr bucketPtr;
 };
 
 //Check the create File

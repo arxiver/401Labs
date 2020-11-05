@@ -51,6 +51,7 @@ int insertItem(int fd,DataItem item){
 		{
 			written = true;
 			item.valid = 1;
+			//printf("My offset %d\n",Offset);
 			result = pwrite(fd, &item, sizeof(DataItem), Offset);
 			if (result <= 0){
 				perror("some error occurred in write");
@@ -95,40 +96,45 @@ int insertItem(int fd,DataItem item){
 					return -1;
 				}
 				// connect the chain 
-				int ptr;
-				int bucketPtrOffset = startingOffset + sizeof(Bucket) - sizeof(int);
-				result = pread(fd, &ptr, sizeof(ptr), bucketPtrOffset);
+				struct BucketPtr bucketPtr;
+				int bucketPtrOffset = startingOffset + sizeof(Bucket) - sizeof(BucketPtr);
+				result = pread(fd, &bucketPtr, sizeof(BucketPtr), bucketPtrOffset);
 				if (result <= 0){
 					perror("some error occurred in pread");
 					return -1;
 				}
-				if (ptr == 0){
+				if (bucketPtr.valid != 1 ){
 					// bucket is never connected before!
-					result = pwrite(fd, &overflowOffset , sizeof(overflowOffset), bucketPtrOffset);
+					bucketPtr.valid = 1;
+					bucketPtr.ptr = overflowOffset;
+					result = pwrite(fd, &bucketPtr , sizeof(BucketPtr), bucketPtrOffset);
 					if (result <= 0) //either an error happened in the pread or it hit an unallocated space
 					{                // 
 						perror("some error occurred in pwrite");
 						return -1;
 					}
+					//printf("Overflow offset %d %d\n",bucketPtr.valid,bucketPtr.ptr);
 				}
 				else {
 					// bucket is connected 
-					struct ChainItem chainItem ;
-					int prevPtr;
-					while (ptr != 0) {
-						prevPtr = ptr;
-						result = pread(fd, &chainItem, sizeof(chainItem), ptr);
+					struct ChainItem chainItem;
+					int ptr = bucketPtr.ptr;
+					int prevPtr = ptr;
+					do {
+						result = pread(fd, &chainItem, sizeof(ChainItem), ptr);
 						if (result <= 0){
 							perror("some error occurred in pread");
 							return -1;
 						}
-						if(chainItem.valid == 1)
+						if(chainItem.valid == 1){
+							prevPtr = ptr;
 							ptr = chainItem.chainPtr;
-						else 
-							break;
-					}
+						}
+					} while (chainItem.chainPtr != 0);
+					
 					chainItem.chainPtr = overflowOffset;
-					result = pwrite(fd, &chainItem, CHAIN_RECORD_SIZE, prevPtr);
+					printf("Write PTR %d\n",prevPtr);
+					result = pwrite(fd, &chainItem, sizeof(ChainItem), prevPtr);
 					if (result <= 0){
 						perror("some error occurred in pwrite");
 						return -1;
@@ -209,38 +215,42 @@ int searchItem(int fd,struct DataItem* item,int *count)
  * Output: no. of non-empty records
  */
 int DisplayFile(int fd){
-
+	//printf("bucket size %d data item size %d bucket ptr size %d\n",sizeof(Bucket),sizeof(DataItem),sizeof(BucketPtr));
+	//return 0;
 	struct DataItem data;
 	int count = 0;
-	int Offset = 0;
-	int bucketItr = 0;
-	for (bucketItr = 0; bucketItr < MBUCKETS; bucketItr++)
+	for (int bucketItr = 0; bucketItr < MBUCKETS; bucketItr++)
 	{
-		int endOffset = ((bucketItr+1) * sizeof(Bucket)) - sizeof(int);
+		int endOffset = ((bucketItr+1) * sizeof(Bucket)) - sizeof(BucketPtr);
 		//printf("End offset is %d of bucket itr %d\n\n",endOffset,bucketItr);
-		for(Offset = (bucketItr * sizeof(Bucket)) ; Offset < endOffset; Offset += sizeof(DataItem))
+		for(int Offset = (bucketItr * sizeof(Bucket)); Offset < endOffset; Offset += sizeof(DataItem))
 		{
 			ssize_t result = pread(fd,&data,sizeof(DataItem), Offset);
 			if(result < 0)
 			{ 	  perror("some error occurred in pread");
 				return -1;
 			} else if (result == 0 || data.valid == 0 ) { //empty space found or end of file
-				printf("Bucket: %d, Offset %d:~\n",Offset/BUCKETSIZE,Offset);
+				printf("Bucket: %d, Offset %d:~\n",bucketItr,Offset);
 			} else {
 				pread(fd,&data,sizeof(DataItem), Offset);
-				printf("Bucket: %d, Offset: %d, Data: %d, key: %d\n",Offset/BUCKETSIZE,Offset,data.data,data.key);
+				printf("Bucket: %d, Offset: %d, Data: %d, key: %d\n",bucketItr,Offset,data.data,data.key);
 						count++;
 			}
 		}
-		int nextRecordOffset;
+		// TODO
+		// return 0;
 		struct ChainItem chainItem;
+		struct BucketPtr bucketPtr;
+		ssize_t result = pread(fd, &bucketPtr, sizeof(BucketPtr), endOffset);
 
-		ssize_t result = pread(fd, &nextRecordOffset, sizeof(nextRecordOffset), endOffset);
-		if(result <= 0){
-			return -1;
+		if(bucketPtr.valid != 1)
+		{
+			printf("------------------------------------\n");
+			continue;
 		}
-		printf("Bucket chainPtr: %d\n",nextRecordOffset);
-		while (nextRecordOffset != 0)
+		printf("\t*** Bucket chainPtr: %d ***\n",bucketPtr.ptr);
+		int nextRecordOffset = bucketPtr.ptr;
+		do
 		{
 			if(result < 0)
 			{ 	  
@@ -255,8 +265,8 @@ int DisplayFile(int fd){
 				nextRecordOffset = chainItem.chainPtr;
 				count++;
 			}
-		}
-		printf("\n");
+		} while (chainItem.valid == 1 && nextRecordOffset != 0);
+		printf("------------------------------------\n");
 		
 	}
 	return count;

@@ -51,13 +51,9 @@ int main(){
 
   //3. Add some data in the table
    insert(1, 20);
-   insert(1, 70);
+   insert(1, 50);
    insert(1, 80);
-   insert(1, 70);
-   insert(2, 20);
-   insert(2, 70);
-   insert(2, 80);
-   insert(2, 70);
+   insert(1, 170);
    DisplayFile(filehandle);
 
    return 0;
@@ -175,7 +171,7 @@ void insert(int key,int data){
      item.data = data;
      item.key = key;
      item.valid = 1;
-     int result= insertItem(filehandle,item);  //TODO: implement this function in openAddressing.cpp
+     int result = insertItem(filehandle,item);  //TODO: implement this function in openAddressing.cpp
      printf("Insert: No. of searched records:%d\n",abs(result));
 }
 
