@@ -336,6 +336,10 @@ int deleteDataItem(int fd, int key)
 			//I found the needed record
 			// delete me
 			// item->data = data.data;
+			data.valid = 0;
+			data.key = -1;
+			data.data = 0;
+			ssize_t result = pwrite(fd, &data, sizeof(DataItem), Offset);
 			return count;
 		}
 		else
@@ -352,6 +356,7 @@ int deleteDataItem(int fd, int key)
 	}
 	int nextRecordOffset = bucketPtr.ptr;
 	int currentRecordOffset = bucketPtr.ptr;
+	bool firstEntry = true;
 	do
 	{
 		if (result <= 0) //either an error happened in the pread or it hit an unallocated space
@@ -364,10 +369,37 @@ int deleteDataItem(int fd, int key)
 			//I found the needed record
 			// item->data = data.data;
 			// delete me and connect the chain
-			return currentRecordOffset;
+			if (firstEntry){
+				if (chainItem.chainPtr == 0 && chainItem.valid == 1){
+					bucketPtr.valid = 0;
+					bucketPtr.ptr = 0;
+					result = pwrite(fd, &bucketPtr, sizeof(BucketPtr), endOffset);
+				}
+				else{
+					bucketPtr.valid = 1;
+					bucketPtr.ptr = chainItem.chainPtr;
+					result = pwrite(fd, &bucketPtr, sizeof(BucketPtr), endOffset);
+				}
+			}
+			else{
+				if (chainItem.chainPtr == 0 && chainItem.valid == 1){
+					bucketPtr.valid = 0;
+					bucketPtr.ptr = 0;
+					// write to the previous record instead of bucket ptr
+					result = pwrite(fd, &bucketPtr, sizeof(BucketPtr), endOffset);
+				}
+				else{
+					bucketPtr.valid = 1;
+					bucketPtr.ptr = chainItem.chainPtr;
+					// write to the previous record instead of bucket ptr
+					result = pwrite(fd, &bucketPtr, sizeof(BucketPtr), endOffset);
+				}
+			}
+			return count;
 		}
 		else
 		{
+			firstEntry = false;
 			count++;
 			pread(fd, &chainItem, CHAIN_RECORD_SIZE, nextRecordOffset);
 			currentRecordOffset = nextRecordOffset;
