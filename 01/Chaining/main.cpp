@@ -1,8 +1,8 @@
 //============================================================================
 // Name        : hashskeleton.cpp
-// Author      : 
-// Version     :
-// Copyright   : Code adapted From https://www.tutorialspoint.com/
+// Author      : Mohamed Mokhtar & Khald Amjad 
+// Version     : 1.0 Assignment
+// Copyright   : Code adapted From https://www.tutorialspoint.com/ & Edited by the authors
 // Description : Hashing using open addressing
 //============================================================================
 
@@ -72,13 +72,13 @@ int main(){
 
    //4. Display the database file again
    DisplayFile(filehandle);
+   search(13);
+   deleteItem(13);
    return 0;
    // TODO
    //5. Search the database
-   search(13);
 
    //6. delete an item from the database
-   deleteItem(31);
 
    //7. Display the final data base
    DisplayFile(filehandle);

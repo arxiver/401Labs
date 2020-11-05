@@ -331,11 +331,11 @@ int deleteDataItem(int fd, int key)
 			perror("some error occurred in pread");
 			return -1;
 		}
-		else if (data.valid == 1 && data.key == item->key)
+		else if (data.valid == 1 && data.key == key)
 		{
 			//I found the needed record
 			// delete me
-			item->data = data.data;
+			// item->data = data.data;
 			return count;
 		}
 		else
@@ -359,10 +359,11 @@ int deleteDataItem(int fd, int key)
 			perror("some error occurred in pread");
 			return -1;
 		}
-		else if (data.valid == 1 && data.key == item->key)
+		else if (chainItem.valid == 1 && chainItem.key == key)
 		{
 			//I found the needed record
-			item->data = data.data;
+			// item->data = data.data;
+			// delete me and connect the chain
 			return currentRecordOffset;
 		}
 		else
