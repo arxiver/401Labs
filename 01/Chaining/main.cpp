@@ -50,10 +50,16 @@ int main(){
    //DisplayFile(filehandle);
 
   //3. Add some data in the table
-   insert(1, 20);
-   insert(1, 50);
-   insert(1, 80);
-   insert(1, 170);
+   insert(9, 20);
+   insert(19, 129);
+   insert(29, 129);
+   insert(39, 139);
+   insert(49, 149);
+   insert(59, 159);
+   DisplayFile(filehandle);
+   deleteItem(39);
+   DisplayFile(filehandle);
+   return 0;
    insert(4, 25);
    insert(12, 44);
    insert(14, 32);
@@ -72,9 +78,6 @@ int main(){
 
    //4. Display the database file again
    DisplayFile(filehandle);
-   search(13);
-   deleteItem(13);
-   return 0;
    // TODO
    //5. Search the database
 

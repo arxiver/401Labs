@@ -185,6 +185,7 @@ int searchItem(int fd, struct DataItem *item, int *count)
 	int endOffset = ((bucketItr + 1) * sizeof(Bucket)) - sizeof(BucketPtr);
 	for (int Offset = startingOffset; Offset < endOffset; Offset += sizeof(DataItem))
 	{
+		(*count)++;
 		ssize_t result = pread(fd, &data, sizeof(DataItem), Offset);
 		if (result <= 0) //either an error happened in the pread or it hit an unallocated space
 		{
@@ -196,10 +197,6 @@ int searchItem(int fd, struct DataItem *item, int *count)
 			//I found the needed record
 			item->data = data.data;
 			return Offset;
-		}
-		else
-		{
-			(*count)++;
 		}
 	}
 	struct ChainItem chainItem;
@@ -361,6 +358,12 @@ int deleteDataItem(int fd, int key)
 	bool firstEntry = true;
 	do
 	{
+		count++;
+		prevChainItem = chainItem;
+		prevRecordOffset = nextRecordOffset;
+		result = pread(fd, &chainItem, CHAIN_RECORD_SIZE, nextRecordOffset);
+		currentRecordOffset = nextRecordOffset;
+		nextRecordOffset = chainItem.chainPtr;
 		if (result <= 0) //either an error happened in the pread or it hit an unallocated space
 		{
 			perror("some error occurred in pread");
@@ -388,20 +391,13 @@ int deleteDataItem(int fd, int key)
 			{
 				prevChainItem.chainPtr = chainItem.chainPtr;
 				result = pwrite(fd, &prevChainItem, CHAIN_RECORD_SIZE, prevRecordOffset);
+				chainItem.valid = 0;
+				result = pwrite(fd, &chainItem, CHAIN_RECORD_SIZE, currentRecordOffset);
 			}
 
 			return count;
 		}
-		else
-		{
-			firstEntry = false;
-			count++;
-			prevChainItem = chainItem;
-			prevRecordOffset = nextRecordOffset;
-			pread(fd, &chainItem, CHAIN_RECORD_SIZE, nextRecordOffset);
-			currentRecordOffset = nextRecordOffset;
-			nextRecordOffset = chainItem.chainPtr;
-		}
+		firstEntry = false;
 	} while (chainItem.valid == 1 && nextRecordOffset != 0);
 	// Passed all possible locations and not found!
 	return -1;
