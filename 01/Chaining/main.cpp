@@ -61,6 +61,7 @@ int main(){
    deleteItem(29);
    insert(59, 159);
    DisplayFile(filehandle);
+   search(59);
    return 0;
    insert(4, 25);
    insert(12, 44);

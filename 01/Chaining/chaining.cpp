@@ -210,23 +210,20 @@ int searchItem(int fd, struct DataItem *item, int *count)
 	int currentRecordOffset = bucketPtr.ptr;
 	do
 	{
+		(*count)++;
+		result = pread(fd, &chainItem, CHAIN_RECORD_SIZE, nextRecordOffset);
+		currentRecordOffset = nextRecordOffset;
+		nextRecordOffset = chainItem.chainPtr;
 		if (result <= 0) //either an error happened in the pread or it hit an unallocated space
 		{
 			perror("some error occurred in pread");
 			return -1;
 		}
-		else if (data.valid == 1 && data.key == item->key)
+		else if (chainItem.valid == 1 && chainItem.key == item->key)
 		{
 			//I found the needed record
-			item->data = data.data;
+			item->data = chainItem.data;
 			return currentRecordOffset;
-		}
-		else
-		{
-			(*count)++;
-			pread(fd, &chainItem, CHAIN_RECORD_SIZE, nextRecordOffset);
-			currentRecordOffset = nextRecordOffset;
-			nextRecordOffset = chainItem.chainPtr;
 		}
 	} while (chainItem.valid == 1 && nextRecordOffset != 0);
 	// Passed all possible locations and not found!
@@ -267,8 +264,6 @@ int DisplayFile(int fd)
 				count++;
 			}
 		}
-		// TODO
-		// return 0;
 		struct ChainItem chainItem;
 		struct BucketPtr bucketPtr;
 		ssize_t result = pread(fd, &bucketPtr, sizeof(BucketPtr), endOffset);
