@@ -54,10 +54,6 @@ int main(){
    insert(1, 50);
    insert(1, 80);
    insert(1, 170);
-   DisplayFile(filehandle);
-
-   return 0;
-
    insert(4, 25);
    insert(12, 44);
    insert(14, 32);
@@ -76,6 +72,7 @@ int main(){
 
    //4. Display the database file again
    DisplayFile(filehandle);
+   return 0;
    // TODO
    //5. Search the database
    search(13);

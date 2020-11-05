@@ -133,7 +133,6 @@ int insertItem(int fd,DataItem item){
 					} while (chainItem.chainPtr != 0);
 					
 					chainItem.chainPtr = overflowOffset;
-					printf("Write PTR %d\n",prevPtr);
 					result = pwrite(fd, &chainItem, sizeof(ChainItem), prevPtr);
 					if (result <= 0){
 						perror("some error occurred in pwrite");
@@ -282,11 +281,22 @@ int DisplayFile(int fd){
  */
 int deleteOffset(int fd, int Offset)
 {
-	struct DataItem dummyItem;
-	dummyItem.valid = 0;
-	dummyItem.key = -1;
-	dummyItem.data = 0;
-	int result = pwrite(fd,&dummyItem,sizeof(DataItem), Offset);
-	return result;
+	if (Offset >= MBUCKETS*BUCKETSIZE){
+		struct ChainItem dummyItem;
+		dummyItem.valid = 0;
+		dummyItem.key = -1;
+		dummyItem.data = 0;
+		dummyItem.chainPtr = 0;
+		int result = pwrite(fd,&dummyItem,sizeof(ChainItem), Offset);
+		return result ;
+	}
+	else {
+		struct DataItem dummyItem;
+		dummyItem.valid = 0;
+		dummyItem.key = -1;
+		dummyItem.data = 0;
+		int result = pwrite(fd,&dummyItem,sizeof(DataItem), Offset);
+		return result;
+	}
 }
 
