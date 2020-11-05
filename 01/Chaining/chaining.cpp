@@ -37,9 +37,10 @@ int insertItem(int fd,DataItem item){
     int hashIndex = hashCode(item.key);              //calculate the Bucket index
     int startingOffset = hashIndex * sizeof(Bucket); //calculate the starting address of the bucket
     int Offset = startingOffset;                     //Offset variable which we will use to iterate on the db
+	ssize_t result;
 	bool written = false;
 	for (int i = 0; i < RECORDSPERBUCKET; ++i){
-		ssize_t result = pread(fd, &data, sizeof(DataItem), Offset);
+		result = pread(fd, &data, sizeof(DataItem), Offset);
 		count++;
 		if (result <= 0) //either an error happened in the pread or it hit an unallocated space
 		{                // 
@@ -50,7 +51,11 @@ int insertItem(int fd,DataItem item){
 		{
 			written = true;
 			item.valid = 1;
-			pwrite(fd, &item, sizeof(DataItem), Offset);
+			result = pwrite(fd, &item, sizeof(DataItem), Offset);
+			if (result <= 0){
+				perror("some error occurred in write");
+				return -1;
+			}
 			return count;
 		}
 		else
@@ -73,7 +78,7 @@ int insertItem(int fd,DataItem item){
 			count++;
 			// fetch first empty place and take it's offset and attach the data to it
 			// and attach the address of it to the main bucket
-			ssize_t result = pread(fd, &data, CHAIN_RECORD_SIZE, overflowOffset);
+			result = pread(fd, &data, CHAIN_RECORD_SIZE, overflowOffset);
 			if (result <= 0) //either an error happened in the pread or it hit an unallocated space
 			{                // perror("some error occurred in pread");
 				perror("some error occurred in pread");
@@ -83,21 +88,26 @@ int insertItem(int fd,DataItem item){
 			{
 				written = true;
 				newItem.valid = 1;
-				pwrite(fd, &newItem, CHAIN_RECORD_SIZE, overflowOffset);
+				result = pwrite(fd, &newItem, CHAIN_RECORD_SIZE, overflowOffset);
+				if (result <= 0) //either an error happened in the pread or it hit an unallocated space
+				{                // perror("some error occurred in pread");
+					perror("some error occurred in pwrite");
+					return -1;
+				}
 				// connect the chain 
 				int ptr;
 				int bucketPtrOffset = startingOffset + sizeof(Bucket) - sizeof(int);
-				ssize_t cresult = pread(fd, &ptr, sizeof(ptr), bucketPtrOffset);
-				if (cresult <= 0){
+				result = pread(fd, &ptr, sizeof(ptr), bucketPtrOffset);
+				if (result <= 0){
 					perror("some error occurred in pread");
 					return -1;
 				}
 				if (ptr == 0){
 					// bucket is never connected before!
-					ssize_t wresult = pwrite(fd, &overflowOffset , sizeof(overflowOffset), bucketPtrOffset);
-					if (wresult <= 0) //either an error happened in the pread or it hit an unallocated space
+					result = pwrite(fd, &overflowOffset , sizeof(overflowOffset), bucketPtrOffset);
+					if (result <= 0) //either an error happened in the pread or it hit an unallocated space
 					{                // 
-						perror("some error occurred in pread");
+						perror("some error occurred in pwrite");
 						return -1;
 					}
 				}
@@ -107,17 +117,20 @@ int insertItem(int fd,DataItem item){
 					int prevPtr;
 					while (ptr != 0) {
 						prevPtr = ptr;
-						ssize_t cresult = pread(fd, &chainItem, sizeof(chainItem), ptr);
-						if (cresult <= 0){
+						result = pread(fd, &chainItem, sizeof(chainItem), ptr);
+						if (result <= 0){
 							perror("some error occurred in pread");
 							return -1;
 						}
-						ptr = chainItem.chainPtr;
+						if(chainItem.valid == 1)
+							ptr = chainItem.chainPtr;
+						else 
+							break;
 					}
 					chainItem.chainPtr = overflowOffset;
-					ssize_t cresult = pwrite(fd, &chainItem, CHAIN_RECORD_SIZE, prevPtr);
-					if (cresult <= 0){
-						perror("some error occurred in pread");
+					result = pwrite(fd, &chainItem, CHAIN_RECORD_SIZE, prevPtr);
+					if (result <= 0){
+						perror("some error occurred in pwrite");
 						return -1;
 					}
 				}
