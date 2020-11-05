@@ -57,7 +57,9 @@ int main(){
    insert(49, 149);
    insert(59, 159);
    DisplayFile(filehandle);
-   deleteItem(39);
+   deleteItem(59);
+   deleteItem(29);
+   insert(59, 159);
    DisplayFile(filehandle);
    return 0;
    insert(4, 25);

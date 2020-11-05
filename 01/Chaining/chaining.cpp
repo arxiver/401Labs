@@ -360,9 +360,9 @@ int deleteDataItem(int fd, int key)
 	{
 		count++;
 		prevChainItem = chainItem;
-		prevRecordOffset = nextRecordOffset;
-		result = pread(fd, &chainItem, CHAIN_RECORD_SIZE, nextRecordOffset);
+		prevRecordOffset = currentRecordOffset;
 		currentRecordOffset = nextRecordOffset;
+		result = pread(fd, &chainItem, CHAIN_RECORD_SIZE, nextRecordOffset);
 		nextRecordOffset = chainItem.chainPtr;
 		if (result <= 0) //either an error happened in the pread or it hit an unallocated space
 		{
