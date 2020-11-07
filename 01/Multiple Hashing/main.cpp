@@ -45,11 +45,10 @@ int main(){
 //here we create a sample test to read and write to our database file
 
   //1. Create Database file or Open it if it already exists, check readfile.cpp
-   filehandle = createFile(FILESIZE,"openaddressing");
+   filehandle = createFile(FILESIZE,"MultipleHashing");
   //2. Display the database file, check openAddressing.cpp
    DisplayFile(filehandle);
 
-  
   //3. Add some data in the table
    insert(1, 20);
    insert(2, 70);
@@ -83,7 +82,8 @@ int main(){
    DisplayFile(filehandle);
    // And Finally don't forget to close the file.
    close(filehandle);
-   
+
+
    ///////////////////test case 1///////////////////
 
    printf("////////////////////test case 1////////////////////");
@@ -93,26 +93,22 @@ int main(){
    DisplayFile(filehandle);
 
   //3. Add some data in the table
-   insert(1, 20);
-   insert(11, 70);
-   insert(21, 80);
-   insert(31, 25);
-   insert(41, 44);
-   insert(51, 32);
-   insert(61, 11);
-   insert(71, 78);
-   insert(81, 97);
-   insert(91, 34);
-   insert(102, 730);
+   insert(1, 20); //Bucket:1,record:0
+   insert(11, 70);//Bucket:1,record:1
+   insert(21, 80);//Bucket:8,record:0 ---(21%10)+(7-(21%7))=8
+   insert(8, 90);//Bucket:8,record:1
+   insert(31, 25);//Bucket:5,record:0 ---(31%10)+(7-(31%7))=5
+   insert(5, 35);//Bucket:5,record:1
+   insert(15, 730);//Bucket:7,record:0 ---(15%10)+(7-(15%7))=7
 
    //4. Display the database file again
    DisplayFile(filehandle);
 
    //5. Search the database
-   search(41);
+   search(31);
 
    //6. delete an item from the database
-   deleteItem(51);
+   deleteItem(21);
 
    //7. Display the final data base
    DisplayFile(filehandle);
@@ -128,22 +124,28 @@ int main(){
    DisplayFile(filehandle);
 
   //3. Add some data in the table
-   insert(1, 20);
-   insert(11, 70);
-   insert(21, 70);
-   insert(31, 80);
-   insert(38, 80);
-   insert(48, 80);
+   insert(9, 20);//Bucket:9,record:0
+   insert(19, 70);//Bucket:9,record:1
+   insert(5, 100);//Bucket:5,record:0
+   insert(29, 70);//Bucket:5,record:1
+   insert(39, 80);//Bucket:2,record:0
+   insert(49, 80);//Bucket:6,record:0
+   insert(59, 80);//Bucket:3,record:0
+   insert(69, 80);//Bucket:0,record:0
+   insert(79, 80);//Bucket:4,record:0
+   insert(0, 80);//Bucket:0,record:1
+   insert(10, 80);//Bucket:4,record:1
+
 
 
    //4. Display the database file again
    DisplayFile(filehandle);
 
    //5. Search the database
-   search(31);
+   search(49);
 
    //6. delete an item from the database
-   deleteItem(31);
+   deleteItem(39);
 
    //7. Display the final data base
    DisplayFile(filehandle);

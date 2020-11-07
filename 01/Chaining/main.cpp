@@ -47,22 +47,12 @@ int main(){
   //1. Create Database file or Open it if it already exists, check readfile.cpp
    filehandle = createFile(FILESIZE,"chaining");
   //2. Display the database file, check openAddressing.cpp
-   //DisplayFile(filehandle);
+   DisplayFile(filehandle);
 
   //3. Add some data in the table
-   insert(9, 20);
-   insert(19, 129);
-   insert(29, 129);
-   insert(39, 139);
-   insert(49, 149);
-   insert(59, 159);
-   DisplayFile(filehandle);
-   deleteItem(59);
-   deleteItem(29);
-   insert(59, 159);
-   DisplayFile(filehandle);
-   search(59);
-   return 0;
+   insert(1, 20);
+   insert(2, 70);
+   insert(42, 80);
    insert(4, 25);
    insert(12, 44);
    insert(14, 32);
@@ -81,15 +71,18 @@ int main(){
 
    //4. Display the database file again
    DisplayFile(filehandle);
-   // TODO
+
    //5. Search the database
+   search(13);
 
    //6. delete an item from the database
+   deleteItem(31);
 
    //7. Display the final data base
    DisplayFile(filehandle);
    // And Finally don't forget to close the file.
    close(filehandle);
+
 
 
    ///////////////////test case 1///////////////////
@@ -101,26 +94,23 @@ int main(){
    DisplayFile(filehandle);
 
   //3. Add some data in the table
-   insert(1, 20);
-   insert(11, 70);
-   insert(21, 80);
-   insert(31, 25);
-   insert(41, 44);
-   insert(51, 32);
-   insert(61, 11);
-   insert(71, 78);
-   insert(81, 97);
-   insert(91, 34);
-   insert(102, 730);
-
+   insert(1, 20);//Bucket:1,record:0
+   insert(11, 70);//Bucket:1,record:1
+   insert(21, 80);//Bucket:1,overflow:1
+   insert(31, 25);//Bucket:1,overflow:2
+   insert(41, 44);//Bucket:1,overflow:3
+   insert(51, 32);//Bucket:1,overflow:4
+   insert(61, 11);//Bucket:1,overflow:5
+   insert(102, 730);//Bucket:2,record:0
+   insert(112, 830);//Bucket:2,record:1
    //4. Display the database file again
    DisplayFile(filehandle);
 
    //5. Search the database
-   search(41);
+   search(51);
 
    //6. delete an item from the database
-   deleteItem(51);
+   deleteItem(61);
 
    //7. Display the final data base
    DisplayFile(filehandle);
@@ -135,13 +125,17 @@ int main(){
   //2. Display the database file, check openAddressing.cpp
    DisplayFile(filehandle);
 
-  //3. Add some data in the table
-   insert(1, 20);
-   insert(11, 70);
-   insert(21, 70);
-   insert(31, 80);
-   insert(38, 80);
-   insert(48, 80);
+ //3. Add some data in the table
+   insert(9, 20);//Bucket:9,record:0
+   insert(19, 70);//Bucket:9,record:1
+   insert(29, 70);//Bucket:9,overflow:1
+   insert(39, 80);//Bucket:9,overflow:2
+   insert(49, 70);//Bucket:9,overflow:3
+   insert(59, 80);//Bucket:9,overflow:4
+   insert(0, 80);//Bucket:0,record:0
+   insert(10, 80);//Bucket:0,record:1
+   insert(20, 80);//Bucket:0,overflow:1
+   insert(30, 80);//Bucket:0,overflow:2
 
 
 
