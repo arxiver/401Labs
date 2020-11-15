@@ -108,10 +108,16 @@ int main(){
 
    //5. Search the database
    search(51);
-
+   search(61);
+   search(11);
+   search(102);
+   search(611);
+   search(161);
    //6. delete an item from the database
    deleteItem(61);
-
+   deleteItem(11);
+   deleteItem(16);
+   deleteItem(51);
    //7. Display the final data base
    DisplayFile(filehandle);
    // And Finally don't forget to close the file.
@@ -143,10 +149,18 @@ int main(){
    DisplayFile(filehandle);
 
    //5. Search the database
-   search(31);
+   search(9);
+   search(1);
+   search(0);
+   search(39);
+   search(20);
 
    //6. delete an item from the database
-   deleteItem(31);
+   deleteItem(10);
+   deleteItem(39);
+   deleteItem(30);
+   deleteItem(49);
+
 
    //7. Display the final data base
    DisplayFile(filehandle);

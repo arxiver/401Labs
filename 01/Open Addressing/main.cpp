@@ -104,9 +104,13 @@ int main(){
 
    //5. Search the database
    search(102);
-
+   search(11);
+   search(32);
+   search(31);
    //6. delete an item from the database
    deleteItem(21);
+   deleteItem(102);
+   deleteItem(31);
 
    //7. Display the final data base
    DisplayFile(filehandle);
@@ -136,9 +140,15 @@ int main(){
 
    //5. Search the database
    search(29);
+   search(0);
+   search(10);
+   search(19);
+   search(22);
 
    //6. delete an item from the database
    deleteItem(10);
+   deleteItem(19);
+   deleteItem(22);
 
    //7. Display the final data base
    DisplayFile(filehandle);
