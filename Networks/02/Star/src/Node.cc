@@ -29,20 +29,17 @@ void Node::handleMessage(cMessage *msg)
 
         int rand, dest;
         do { //Avoid sending to yourself
-            rand = uniform(0, gateSize("outs"));
+            rand = uniform(0, getParentModule()->par("n").longValue());
         } while(rand == getIndex());
 
-        //Calculate appropriate gate number
         dest = rand;
-        if (rand > getIndex())
-            dest--;
 
         std::stringstream ss;
-        ss << rand;
+        ss << dest;
         EV << "Sending "<< ss.str() <<" from source " << getIndex() << "\n";
         delete msg;
         msg = new cMessage(ss.str().c_str());
-        send(msg, "outs", dest);
+        send(msg, "out");
 
         double interval = exponential(1 / par("lambda").doubleValue());
         EV << ". Scheduled a new packet after " << interval << "s";

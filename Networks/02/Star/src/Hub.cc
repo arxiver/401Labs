@@ -25,4 +25,5 @@ void Hub::initialize()
 void Hub::handleMessage(cMessage *msg)
 {
     // TODO - Generated method body
+    send(msg, "outs",atoi(msg->getName()));
 }
