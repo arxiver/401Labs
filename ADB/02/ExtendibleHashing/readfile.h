@@ -9,13 +9,13 @@
 #include <stdio.h>
 
 #define MAX_DEPTH 5
-#define MDIR 2 ^ MAX_DEPTH        //Number of directory entries
+#define MDIR (1 << MAX_DEPTH)        //Number of directory entries
 #define MBUCKETS 8                //Number Buckets
 #define RECORDSPERBUCKET 2        //No. of records inside each Bucket
 #define BUCKETSIZE sizeof(Bucket) //Size of the bucket (in bytes)
 #define FILESIZE MDIR * sizeof(DataItem)
 // global depth + directory ptrs
-#define DIRSIZE sizeof(int) + MDIR * sizeof(DirItem)
+#define DIRSIZE  sizeof(int) + MDIR * sizeof(DirItem)
 #define PRIME 7
 
 struct DirItem

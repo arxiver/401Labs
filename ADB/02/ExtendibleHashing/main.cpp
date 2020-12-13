@@ -6,28 +6,16 @@ int filehandle; //handler for the database file
 int dirhandle;  //handler for the database file
 int main()
 {
-   //here we create a sample test to read and write to our database file
    //1. Create Database file or Open it if it already exists, check readfile.cpp
-   filehandle = createFile(FILESIZE, "chaining");
-   dirhandle = createFile(FILESIZE, "directory");
-   //2. Display the database file, check openAddressing.cpp
-   DisplayFile(filehandle);
-
-   //3. Add some data in the table
-   insert(1, 20);
-   insert(2, 70);
-   insert(42, 80);
-   insert(4, 25);
+   printf("%d",MDIR);
+   filehandle = createFile(FILESIZE, "extendible");
+   dirhandle = createFile(DIRSIZE, "directory");
    // And Finally don't forget to close the file.
    close(filehandle);
+   close(dirhandle);
    return 0;
 }
 
-/* functionality: insert the (key,data) pair into the database table
-                  and print the number of comparisons it needed to find
-    Input: key, data
-    Output: print statement with the no. of comparisons
-*/
 void insert(int key, int data)
 {
    struct DataItem item;
@@ -38,11 +26,6 @@ void insert(int key, int data)
    printf("Insert: No. of searched records:%d\n", abs(result));
 }
 
-/* Functionality: search for a data in the table using the key
-
-   Input:  key
-   Output: the return data Item
-*/
 struct DataItem *search(int key)
 {
    struct DataItem *item = (struct DataItem *)malloc(sizeof(struct DataItem));
