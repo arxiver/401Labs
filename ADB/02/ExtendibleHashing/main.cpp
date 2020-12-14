@@ -7,9 +7,26 @@ int dirhandle;  //handler for the database file
 int main()
 {
    //1. Create Database file or Open it if it already exists, check readfile.cpp
-   printf("%d",MDIR);
    filehandle = createFile(FILESIZE, "extendible");
    dirhandle = createFile(DIRSIZE, "directory");
+   insert(1,1);
+   insert(16,2);
+   insert(20,3);
+   insert(7,4);
+   insert(27,5);
+   insert(29,6);
+   insert(18,7);
+   /*
+   insert(11,8);
+   insert(20,9);
+   insert(28,10);
+   insert(7,11);
+   insert(14,12);
+   insert(31,13);
+   insert(21,14);
+   insert(24,15);
+   */
+   DisplayFile(filehandle);
    // And Finally don't forget to close the file.
    close(filehandle);
    close(dirhandle);
@@ -22,7 +39,7 @@ void insert(int key, int data)
    item.data = data;
    item.key = key;
    item.valid = 1;
-   int result = insertItem(filehandle, item);
+   int result = insertItem(filehandle,dirhandle, item);
    printf("Insert: No. of searched records:%d\n", abs(result));
 }
 
