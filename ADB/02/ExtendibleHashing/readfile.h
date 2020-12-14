@@ -54,10 +54,12 @@ int insertItem(int fd, int dd, DataItem item);
 int DisplayFile(int fd);
 int deleteDataItem(int filehandle, int key);
 int searchItem(int filehandle, struct DataItem *item, int *count);
+
 bool cmpMostNBits(int a,int b, int n);
 bool updateDirectory(int fd, int dd, int overflow);
 void updateBuckets(int fd,int dir1,int dir2);
 bool pushBucketItem(int fd, int offset, DataItem item,int & searched,bool);
 void updateBucketLocalDepth(int fd, int offset, int newDepth);
 int readLocalDepth(int fd, int dir);
+int findFreeBucket(int fd);
 #endif /* READFILE_H_ */

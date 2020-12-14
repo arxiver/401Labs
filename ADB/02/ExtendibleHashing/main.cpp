@@ -16,7 +16,6 @@ int main()
    insert(27,5);
    insert(29,6);
    insert(18,7);
-   /*
    insert(11,8);
    insert(20,9);
    insert(28,10);
@@ -24,6 +23,7 @@ int main()
    insert(14,12);
    insert(31,13);
    insert(21,14);
+   /*
    insert(24,15);
    */
    DisplayFile(filehandle);
@@ -40,7 +40,7 @@ void insert(int key, int data)
    item.key = key;
    item.valid = 1;
    int result = insertItem(filehandle,dirhandle, item);
-   printf("Insert: No. of searched records:%d\n", abs(result));
+   printf("Insert: [%d: %d] No. of searched records:%d\n",key,data,abs(result));
 }
 
 struct DataItem *search(int key)
