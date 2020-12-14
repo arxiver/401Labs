@@ -9,6 +9,27 @@ bool readDirectory(int dd)
             dirCache = true;
       return dirCache;
 }
+int searchItem(int fd,int dd, struct DataItem &item, int &count)
+{
+	  count = 0;				//No of accessed records
+	  int searched = 0, result = 0;
+      bool inserted = false;
+      if(!dirCache) readDirectory(dd);
+      if (directory.depth.valid != 1){
+            directory.depth.valid = 1;
+            directory.depth.value = 0;
+            directory.items[0].ptr = 0;
+            result = pwrite(dd, &directory, sizeof(Depth), 0);
+            return -1;
+      }
+      int dirSize = (1 << directory.depth.value);
+
+      int dirIndex = (item.key%MDIR) >>(MAX_DEPTH - directory.depth.value);
+      if(dirIndex>=dirSize) return -1;
+
+      int bucketOffset = directory.items[dirIndex].ptr;
+      return searchBucketItem(fd,bucketOffset,item,count);
+}
 int insertItem(int fd ,int dd, DataItem item)
 {
       int searched = 0, result = 0;
@@ -137,7 +158,7 @@ bool pushBucketItem(int fd, int offset, DataItem item,int & searched,bool first=
 {      
       int result;
       DataItem di;
-      printf("Inserting key %d into .. %d \n",item.data,offset);
+      printf("Inserting key %d into .. %d \n",item.key,offset);
       for(int i = offset; i < offset+BUCKETSIZE-2*sizeof(int); i += sizeof(DataItem)){
             searched++;
             result = pread(fd,&di,sizeof(DataItem),i);
@@ -151,10 +172,22 @@ bool pushBucketItem(int fd, int offset, DataItem item,int & searched,bool first=
       }
       return false;
 }
-int searchItem(int fd, struct DataItem *item, int *count)
-{
-
+int searchBucketItem(int fd, int offset, DataItem &item,int & searched)
+{      
+      int result;
+      DataItem di;
+      printf("Searching key %d into .. %d \n",item.key,offset);
+      for(int i = offset; i < offset+BUCKETSIZE-2*sizeof(int); i += sizeof(DataItem)){
+            searched++;
+            result = pread(fd,&di,sizeof(DataItem),i);
+            if(di.valid == 1 && di.key == item.key && result != -1){
+            	item.data=di.data;
+                return i;
+            }
+      }
+      return -1;
 }
+
 int DisplayFile(int fd)
 {
       int result,localdepth,itemsItr=0;
@@ -186,7 +219,12 @@ int DisplayFile(int fd)
       }
       return 1;
 }
-int deleteDataItem(int fd, int key)
+int deleteOffset(int fd, int Offset)
 {
-	
+	struct DataItem dummyItem;
+	dummyItem.valid = 0;
+	dummyItem.key = -1;
+	dummyItem.data = 0;
+	int result = pwrite(fd,&dummyItem,sizeof(DataItem), Offset);
+	return result;
 }
