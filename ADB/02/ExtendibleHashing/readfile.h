@@ -12,7 +12,7 @@
 #define MDIR (1 << MAX_DEPTH)        //Number of directory entries
 #define RECORDSPERBUCKET 2        //No. of records inside each Bucket
 #define BUCKETSIZE sizeof(Bucket) //Size of the bucket (in bytes)
-#define FILESIZE MDIR * sizeof(DataItem)
+#define FILESIZE MDIR * BUCKETSIZE
 // global depth + directory ptrs
 #define DIRSIZE sizeof(Directory)
 #define PRIME 7

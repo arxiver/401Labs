@@ -11,6 +11,7 @@ int main()
    dirhandle = createFile(DIRSIZE, "directory");
    insert(1,1);
    insert(16,2);
+   /*
    insert(20,3);
    insert(7,4);
    insert(27,5);
@@ -23,7 +24,6 @@ int main()
    insert(14,12);
    insert(31,13);
    insert(21,14);
-   /*
    insert(24,15);
    */
    DisplayFile(filehandle);
